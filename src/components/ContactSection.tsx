@@ -10,7 +10,7 @@ export default function ContactSection() {
 
         {/* Email link card */}
         <a
-          href="mailto:17701948541@qq.com"
+          href="mailto:17701948541@163.com"
           className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] text-[15px] text-white/70 hover:text-white hover:border-white/[0.12] transition-all"
         >
           <svg
@@ -35,7 +35,7 @@ export default function ContactSection() {
               strokeLinejoin="round"
             />
           </svg>
-          17701948541@qq.com
+          17701948541@163.com
         </a>
 
         <p className="mt-16 text-[12px] text-white/20">
