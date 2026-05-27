@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(netstat -ano)",
+      "Bash(npm run *)",
+      "Bash(xxd)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(curl -s -X POST http://localhost:3000/api/analyze-product -H \"Content-Type: application/json\" -d '{\"productName\":\"Magnetic Phone Stand\",\"market\":\"欧美\",\"platform\":\"TikTok\"}')",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('market_score:', d['market_analysis']['recommend_score']\\); print\\('trend:', d['market_analysis']['trend_level']\\); print\\('should_launch:', d['market_analysis']['should_launch']\\); print\\('pain_points:', len\\(d['user_profile']['pain_points']\\)\\); print\\('tiktok_titles:', len\\(d['content']['tiktok']\\)\\); print\\('OK - All fields present'\\)\")",
+      "Bash(curl -s -H \"Cache-Control: no-cache\" http://localhost:3000)",
+      "Bash(taskkill //F //PID 23140)",
+      "Bash(curl -s http://localhost:3000/_next/static/css/app/layout.css)",
+      "Bash(curl -s -X POST http://localhost:3000/api/analyze-product -H \"Content-Type: application/json\" -d '{\"productName\":\"test\",\"market\":\"欧美\",\"platform\":\"TikTok\"}')",
+      "Bash(taskkill //F //PID 28184)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit *)"
+    ]
+  }
+}
