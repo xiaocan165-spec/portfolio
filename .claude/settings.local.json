@@ -14,7 +14,22 @@
       "Bash(taskkill //F //PID 28184)",
       "Bash(git config *)",
       "Bash(git add *)",
-      "Bash(git commit *)"
+      "Bash(git commit *)",
+      "Bash(gh auth *)",
+      "Bash(winget install *)",
+      "Bash(gh --version)",
+      "Bash(npx vercel *)",
+      "Bash(git remote *)",
+      "Bash(git push *)",
+      "Bash(curl -s https://portfolio-xiaocan-s-projects.vercel.app/)",
+      "Bash(curl -sL https://portfolio-xiaocan-s-projects.vercel.app/)",
+      "Bash(curl -sI https://portfolio-xiaocan-s-projects.vercel.app/)",
+      "WebFetch(domain:portfolio-xiaocan-s-projects.vercel.app)",
+      "Bash(curl -v --connect-timeout 10 https://portfolio-xiaocan-s-projects.vercel.app/)",
+      "Bash(nslookup portfolio-xiaocan-s-projects.vercel.app)",
+      "Bash(gh api *)",
+      "Bash(cmd.exe /c \"echo %USERPROFILE%\\\\Desktop\")",
+      "Bash(cmd.exe /c \"dir %USERPROFILE%\\\\Desktop\\\\*.png\")"
     ]
   }
 }

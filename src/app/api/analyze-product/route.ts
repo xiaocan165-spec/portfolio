@@ -16,12 +16,18 @@ export async function POST(request: NextRequest) {
     }
 
     const provider = process.env.AI_PROVIDER || "deepseek";
+    const apiKey =
+      provider === "openai"
+        ? process.env.OPENAI_API_KEY
+        : process.env.DEEPSEEK_API_KEY;
+
+    // No API key configured — skip AI call, use demo mode directly
+    if (!apiKey) {
+      return NextResponse.json(generateDemoAnalysis(body));
+    }
 
     const client = new OpenAI({
-      apiKey:
-        provider === "openai"
-          ? process.env.OPENAI_API_KEY
-          : process.env.DEEPSEEK_API_KEY,
+      apiKey,
       baseURL:
         provider === "openai"
           ? process.env.OPENAI_BASE_URL || "https://api.openai.com/v1"
