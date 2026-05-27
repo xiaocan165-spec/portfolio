@@ -6,6 +6,7 @@ import type {
   AnalyzeResponse,
   AnalysisStatus,
 } from "@/lib/types";
+import { generateDemoAnalysis } from "@/lib/demo";
 
 const MARKETS = ["欧美", "东南亚", "全球"] as const;
 const PLATFORMS = ["TikTok", "Amazon", "Xiaohongshu"] as const;
@@ -117,10 +118,17 @@ export default function ProductAnalyzer() {
       setResult(data);
       setStatus("success");
     } catch (err: unknown) {
-      setError(
-        err instanceof Error ? err.message : "AI暂时无法分析，请稍后再试"
-      );
-      setStatus("error");
+      // Static hosting fallback — use client-side demo data when API is unreachable
+      try {
+        const demoResult = generateDemoAnalysis(form);
+        setResult(demoResult);
+        setStatus("success");
+      } catch {
+        setError(
+          err instanceof Error ? err.message : "AI暂时无法分析，请稍后再试"
+        );
+        setStatus("error");
+      }
     }
   };
 
