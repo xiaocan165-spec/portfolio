@@ -99,7 +99,14 @@
       "Bash(PYTHONIOENCODING=utf-8 python -X utf8 \"C:/Users/小灿/Desktop/build_manual.py\")",
       "Bash(python \"C:/Users/小灿/Desktop/convert_html.py\")",
       "Bash(curl -s -X POST https://api.deepseek.com/v1/chat/completions -H 'Content-Type: application/json' -H 'Authorization: Bearer sk-172a16523d0d414b8eb15454acee4dba' -d '{\"model\":\"deepseek-chat\",\"messages\":[{\"role\":\"user\",\"content\":\"say hello\"}],\"max_tokens\":10}')",
-      "Bash(curl -s -I -X OPTIONS https://api.deepseek.com/v1/chat/completions -H 'Origin: https://xiaocan165-spec.github.io' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: authorization,content-type')"
+      "Bash(curl -s -I -X OPTIONS https://api.deepseek.com/v1/chat/completions -H 'Origin: https://xiaocan165-spec.github.io' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: authorization,content-type')",
+      "Bash(npx serve *)",
+      "Bash(curl -s \"http://localhost:3456/portfolio/\")",
+      "Bash(grep -oP '.{0,80}process\\\\.env\\\\.[A-Z_]+.{0,80}' \"C:\\\\Users\\\\小灿\\\\ai-product-intelligence\\\\out\\\\_next\\\\static\\\\chunks\\\\app\\\\page-2df44bd637ee6073.js\")",
+      "Bash(curl -sI \"https://xiaocan165-spec.github.io/portfolio/_next/static/chunks/app/page-8834c965b3192a9f.js\")",
+      "Bash(curl -s \"https://xiaocan165-spec.github.io/portfolio/_next/static/chunks/app/page-8834c965b3192a9f.js\")",
+      "Bash(grep -oP '.{0,50}sk-172.{0,50}')",
+      "Bash(grep -oP '.{0,30}sk-172.{0,30}' \"C:\\\\Users\\\\小灿\\\\ai-product-intelligence\\\\out\\\\_next\\\\static\\\\chunks\\\\app\\\\page-2df44bd637ee6073.js\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\小灿\\ComfyUI\\models\\checkpoints",

@@ -103,9 +103,11 @@ export default function ProductAnalyzer() {
     setError("");
     setResult(null);
 
-    const aiApiKey = process.env.NEXT_PUBLIC_AI_API_KEY;
-    const aiBaseUrl = process.env.NEXT_PUBLIC_AI_BASE_URL || "https://api.deepseek.com";
-    const aiModel = process.env.NEXT_PUBLIC_AI_MODEL || "deepseek-chat";
+    // NOTE: These are hardcoded for GitHub Pages static export.
+    // Will be moved to server-side env vars after migrating to Vercel + custom domain.
+    const aiApiKey = "sk-172a16523d0d414b8eb15454acee4dba";
+    const aiBaseUrl = "https://api.deepseek.com";
+    const aiModel = "deepseek-chat";
 
     // If API key is configured, try AI first, fallback to demo on failure
     if (aiApiKey) {
