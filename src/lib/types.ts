@@ -1,10 +1,25 @@
 // ─── Request ──────────────────────────────────────────────
+export type Market = "中国大陆" | "欧美" | "东南亚" | "全球";
+export type Platform =
+  // 海外
+  | "Amazon" | "TikTok Shop" | "Shopee" | "Lazada"
+  // 国内
+  | "抖音" | "淘宝" | "京东" | "拼多多" | "小红书";
+
 export interface AnalyzeRequest {
   productName: string;
-  market: "欧美" | "东南亚" | "全球";
-  platform: "TikTok" | "Amazon" | "Xiaohongshu";
+  market: Market;
+  platform: Platform;
   userPainPoints?: string;
 }
+
+// ─── Platform → Market mapping (for form filtering) ────────
+export const MARKET_PLATFORMS: Record<Market, Platform[]> = {
+  中国大陆: ["抖音", "淘宝", "京东", "拼多多", "小红书"],
+  欧美: ["Amazon", "TikTok Shop", "Shopee", "Lazada"],
+  东南亚: ["Shopee", "Lazada", "TikTok Shop", "Amazon"],
+  全球: ["Amazon", "TikTok Shop", "Shopee", "Lazada", "抖音", "淘宝", "京东", "拼多多", "小红书"],
+};
 
 // ─── Scoring Dimension ─────────────────────────────────────
 export interface ScoreDimension {
@@ -15,9 +30,9 @@ export interface ScoreDimension {
 // ─── Scoring ───────────────────────────────────────────────
 export interface Scoring {
   market_demand: ScoreDimension;   // 市场需求
-  competition: ScoreDimension;     // 竞争强度（分数高=竞争低/机会大）
+  competition: ScoreDimension;     // 竞争友好度（分数高=竞争低/机会大）
   profit_margin: ScoreDimension;   // 利润空间
-  logistics: ScoreDimension;       // 物流难度（分数高=容易）
+  logistics: ScoreDimension;       // 物流友好度（分数高=容易）
   repurchase: ScoreDimension;      // 复购潜力
   differentiation: ScoreDimension; // 差异化空间
 }
@@ -25,50 +40,70 @@ export interface Scoring {
 // ─── Cross-border Metrics ──────────────────────────────────
 export interface CrossBorderMetrics {
   market_maturity: "低" | "中" | "高";
-  price_range: string;            // e.g. "$29–$49"
+  price_range: string;            // ¥ or $ depending on market
   profitability: "低" | "中" | "高";
   supply_chain_difficulty: "低" | "中" | "高";
   shipping_risk: "低" | "中" | "高";
   ad_competition: "低" | "中" | "高";
 }
 
+// ─── Platform Match ────────────────────────────────────────
+export interface PlatformMatch {
+  platform: string;
+  score: number;  // 0-10
+  reason: string;
+}
+
+// ─── Viral Potential ───────────────────────────────────────
+export interface ViralPotential {
+  score: number;          // 0-100
+  grade: "A" | "B" | "C";
+  reasons: string[];      // 3条判断依据
+}
+
+// ─── Content Strategy ──────────────────────────────────────
+export interface ContentStrategy {
+  strategies: string[];   // 推荐打法，如 ["痛点营销", "场景营销"]
+  why: string;            // 推荐原因
+}
+
 // ─── Competitor ────────────────────────────────────────────
 export interface CompetitorAnalysis {
-  brands: string[];               // e.g. ["Anker", "JBL", "TOZO"]
-  characteristics: string[];      // e.g. ["价格竞争激烈", "用户评价内卷"]
+  brands: string[];
+  characteristics: string[];
 }
 
 // ─── Risk ──────────────────────────────────────────────────
 export interface RiskItem {
-  risk: string;                   // e.g. "同质化严重"
+  risk: string;
   severity: "低" | "中" | "高";
 }
 
 // ─── Opportunity ───────────────────────────────────────────
 export interface OpportunityItem {
-  opportunity: string;            // e.g. "细分场景切入"
-  action: string;                 // e.g. "聚焦户外露营场景..."
+  opportunity: string;
+  action: string;
 }
 
-// ─── Content (upgraded) ────────────────────────────────────
+// ─── Content ───────────────────────────────────────────────
 export interface Content {
-  tiktok_pain: string[];          // 痛点型标题 x3
-  tiktok_scene: string[];         // 场景型标题 x3
-  tiktok_curiosity: string[];     // 好奇心型标题 x3
-  xiaohongshu: string[];          // 种草文案
-  amazon_seo: string[];           // SEO 标题
-  ad_copy: string[];             // 广告卖点 x5
+  tiktok_pain: string[];
+  tiktok_scene: string[];
+  tiktok_curiosity: string[];
+  xiaohongshu: string[];
+  amazon_seo: string[];
+  ad_copy: string[];
 }
 
 // ─── Why It Works ──────────────────────────────────────────
 export interface WhyItWorks {
-  summary: string;                // ≤100 字
-  growth_logic: string;           // 增长飞轮
+  summary: string;
+  growth_logic: string;
 }
 
 // ─── Analysis Confidence ───────────────────────────────────
 export interface AnalysisConfidence {
-  score: number;                  // 0-100
+  score: number;
   reason: string;
 }
 
@@ -92,9 +127,13 @@ export interface AnalyzeResponse {
   content: Content;
   why_it_works: WhyItWorks;
   confidence: AnalysisConfidence;
+  // V3新增
+  platform_matches: PlatformMatch[];
+  viral_potential: ViralPotential;
+  content_strategy: ContentStrategy;
 }
 
-// ─── User Profile (kept from V1, slightly enhanced) ────────
+// ─── User Profile ──────────────────────────────────────────
 export interface UserProfile {
   target_audience: string;
   pain_points: string[];

@@ -1,31 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import type { AnalyzeRequest, AnalyzeResponse, AnalysisStatus } from "@/lib/types";
+import { useState, useMemo } from "react";
+import type { AnalyzeRequest, AnalyzeResponse, AnalysisStatus, Market, Platform } from "@/lib/types";
+import { MARKET_PLATFORMS } from "@/lib/types";
 import { buildPrompt, parseAIResponse } from "@/lib/ai";
 import { generateDemoAnalysis } from "@/lib/demo";
 import { computeDecision } from "@/lib/decision";
 import ScoreCard from "./analysis/ScoreCard";
+import ViralPotentialCard from "./analysis/ViralPotentialCard";
+import PlatformMatchCard from "./analysis/PlatformMatchCard";
 import MarketCard from "./analysis/MarketCard";
 import UserCard from "./analysis/UserCard";
+import ContentStrategyCard from "./analysis/ContentStrategyCard";
 import CompetitorCard from "./analysis/CompetitorCard";
-import RiskCard from "./analysis/RiskCard";
 import OpportunityCard from "./analysis/OpportunityCard";
+import RiskCard from "./analysis/RiskCard";
 import ContentCard from "./analysis/ContentCard";
 
-const MARKETS = ["欧美", "东南亚", "全球"] as const;
-const PLATFORMS = ["TikTok", "Amazon", "Xiaohongshu"] as const;
+const MARKETS: Market[] = ["中国大陆", "欧美", "东南亚", "全球"];
 
 export default function ProductAnalyzer() {
   const [form, setForm] = useState<AnalyzeRequest>({
     productName: "",
     market: "欧美",
-    platform: "TikTok",
+    platform: "Amazon",
     userPainPoints: "",
   });
   const [status, setStatus] = useState<AnalysisStatus>("idle");
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState("");
+
+  // Filter platforms based on selected market
+  const availablePlatforms = useMemo<Platform[]>(
+    () => MARKET_PLATFORMS[form.market],
+    [form.market]
+  );
+
+  const updateField = <K extends keyof AnalyzeRequest>(
+    key: K,
+    value: AnalyzeRequest[K]
+  ) => {
+    setForm((prev) => {
+      if (key === "market") {
+        // When market changes, auto-switch platform to first available
+        const newMarket = value as Market;
+        const platformsForMarket = MARKET_PLATFORMS[newMarket];
+        const currentPlatform = prev.platform;
+        const platformStillValid = platformsForMarket.includes(currentPlatform as Platform);
+        return {
+          ...prev,
+          market: newMarket,
+          platform: platformStillValid ? prev.platform : platformsForMarket[0],
+        };
+      }
+      return { ...prev, [key]: value };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +91,7 @@ export default function ProductAnalyzer() {
               { role: "user", content: prompt },
             ],
             temperature: 0.3,
-            max_tokens: 3000,
+            max_tokens: 4000,
           }),
         });
 
@@ -83,7 +113,10 @@ export default function ProductAnalyzer() {
             aiParsed.opportunities &&
             aiParsed.content &&
             aiParsed.why_it_works &&
-            aiParsed.confidence
+            aiParsed.confidence &&
+            aiParsed.platform_matches &&
+            aiParsed.viral_potential &&
+            aiParsed.content_strategy
           ) {
             setResult(aiParsed);
             setStatus("success");
@@ -107,13 +140,6 @@ export default function ProductAnalyzer() {
     }
   };
 
-  const updateField = <K extends keyof AnalyzeRequest>(
-    key: K,
-    value: AnalyzeRequest[K]
-  ) => {
-    setForm((prev) => ({ ...prev, [key]: value }));
-  };
-
   return (
     <div className="max-w-content mx-auto px-5">
       {/* ── Input Card ─────────────────────────────────── */}
@@ -127,7 +153,7 @@ export default function ProductAnalyzer() {
               type="text"
               value={form.productName}
               onChange={(e) => updateField("productName", e.target.value)}
-              placeholder="例如: Magnetic Phone Stand, 磁吸手机支架..."
+              placeholder="例如: 磁吸手机支架, Magnetic Phone Stand..."
               className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 text-[15px] text-white placeholder:text-white/15 transition-all focus:border-ios-blue/40"
               required
             />
@@ -141,7 +167,7 @@ export default function ProductAnalyzer() {
               <select
                 value={form.market}
                 onChange={(e) =>
-                  updateField("market", e.target.value as AnalyzeRequest["market"])
+                  updateField("market", e.target.value as Market)
                 }
                 className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 text-[15px] text-white appearance-none cursor-pointer transition-all focus:border-ios-blue/40"
                 style={{
@@ -165,7 +191,7 @@ export default function ProductAnalyzer() {
               <select
                 value={form.platform}
                 onChange={(e) =>
-                  updateField("platform", e.target.value as AnalyzeRequest["platform"])
+                  updateField("platform", e.target.value as Platform)
                 }
                 className="w-full bg-white/[0.03] border border-white/[0.06] rounded-xl px-4 py-3 text-[15px] text-white appearance-none cursor-pointer transition-all focus:border-ios-blue/40"
                 style={{
@@ -175,7 +201,7 @@ export default function ProductAnalyzer() {
                   paddingRight: "36px",
                 }}
               >
-                {PLATFORMS.map((p) => (
+                {availablePlatforms.map((p) => (
                   <option key={p} value={p} className="bg-[#1c1c1e]">
                     {p}
                   </option>
@@ -260,11 +286,14 @@ export default function ProductAnalyzer() {
             decision={computeDecision(result.scoring)}
             confidence={result.confidence}
           />
+          <ViralPotentialCard data={result.viral_potential} />
+          <PlatformMatchCard matches={result.platform_matches} />
           <MarketCard metrics={result.cross_border_metrics} />
           <UserCard profile={result.user_profile} />
+          <ContentStrategyCard data={result.content_strategy} />
           <CompetitorCard data={result.competitor_analysis} />
-          <RiskCard risks={result.risks} />
           <OpportunityCard items={result.opportunities} />
+          <RiskCard risks={result.risks} />
           <ContentCard data={result.content} />
         </div>
       )}

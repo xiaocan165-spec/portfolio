@@ -1,14 +1,15 @@
-import { AnalyzeRequest, AnalyzeResponse } from "./types";
+import { AnalyzeRequest, AnalyzeResponse, PlatformMatch, ViralPotential, ContentStrategy } from "./types";
 
 /**
  * Demo Mode — returns realistic structured data without AI API.
  * Used as fallback when API key is missing or AI call fails.
  */
 export function generateDemoAnalysis(input: AnalyzeRequest): AnalyzeResponse {
-  const name = input.productName;
   const hasPainPoints = !!input.userPainPoints?.trim();
   const confidenceBase = hasPainPoints ? 82 : 68;
-  const confidenceJitter = Math.floor(Math.random() * 7) - 3; // ±3
+  const confidenceJitter = Math.floor(Math.random() * 7) - 3;
+
+  const isChina = input.market === "中国大陆";
 
   return {
     scoring: buildScoring(input),
@@ -21,10 +22,15 @@ export function generateDemoAnalysis(input: AnalyzeRequest): AnalyzeResponse {
     why_it_works: buildWhyItWorks(input),
     confidence: {
       score: Math.min(92, Math.max(55, confidenceBase + confidenceJitter)),
-      reason: hasPainPoints
-        ? "用户提供了具体痛点线索，分析依据较充分。建议结合更多市场数据验证。"
-        : "未提供用户痛点线索，分析基于通用市场认知。补充具体洞察可提升可信度。",
+      reason: isChina
+        ? "分析基于国内电商市场认知，结合品类趋势和平台特点。提供具体痛点线索可提升可信度。"
+        : hasPainPoints
+          ? "用户提供了具体痛点线索，分析依据较充分。建议结合更多市场数据验证。"
+          : "未提供用户痛点线索，分析基于通用市场认知。补充具体洞察可提升可信度。",
     },
+    platform_matches: buildPlatformMatches(input),
+    viral_potential: buildViralPotential(input),
+    content_strategy: buildContentStrategy(input),
   };
 }
 
@@ -88,13 +94,14 @@ function buildScoring(input: AnalyzeRequest) {
 
 // ─── Cross-border Metrics ──────────────────────────────────
 function buildMetrics(input: AnalyzeRequest) {
+  const isChina = input.market === "中国大陆";
   return {
     market_maturity: "中" as const,
-    price_range: "$19–$39",
+    price_range: isChina ? "¥29–¥89" : "$19–$39",
     profitability: "中" as const,
     supply_chain_difficulty: "低" as const,
     shipping_risk: "低" as const,
-    ad_competition: "中" as const,
+    ad_competition: (isChina ? "高" : "中") as "低" | "中" | "高",
   };
 }
 
@@ -103,9 +110,25 @@ function buildUserProfile(input: AnalyzeRequest) {
   const market = input.market;
   const p = input.productName;
 
+  if (market === "中国大陆") {
+    return {
+      target_audience: `18-35岁国内年轻消费者，以${input.platform === "抖音" ? "短视频冲动消费" : input.platform === "拼多多" ? "社交裂变驱动" : "搜索比价型"}用户为主，覆盖一二线城市白领和下沉市场用户，月均网购消费500-3000元，受抖音/小红书种草影响大。`,
+      pain_points: [
+        `市面${p}品质参差不齐，踩坑成本高`,
+        "同价位产品缺乏差异化，选择困难",
+        "担心实际效果与宣传不符，退换货麻烦",
+      ],
+      purchase_motivation: [
+        "解决具体使用场景中的不便（功能驱动）",
+        "在社交平台获得种草和分享乐趣（内容驱动）",
+        "花合理的钱获得超预期的品质（性价比驱动）",
+      ],
+    };
+  }
+
   if (market === "欧美") {
     return {
-      target_audience: `25-45岁欧美中产消费者，以${input.platform === "TikTok" ? "冲动消费型" : "搜索比价型"}用户为主，年收入$40k-$80k，关注产品品质和使用体验，受Reddit/YouTube测评影响大。`,
+      target_audience: `25-45岁欧美中产消费者，以${input.platform === "TikTok Shop" ? "冲动消费型" : "搜索比价型"}用户为主，年收入$40k-$80k，关注产品品质和使用体验，受Reddit/YouTube测评影响大。`,
       pain_points: [
         `现有${p}产品设计粗糙/使用不便，影响日常体验`,
         "市面上同类产品品质参差不齐，选择成本高",
@@ -153,6 +176,16 @@ function buildUserProfile(input: AnalyzeRequest) {
 
 // ─── Competitors ───────────────────────────────────────────
 function buildCompetitors(input: AnalyzeRequest) {
+  if (input.market === "中国大陆") {
+    return {
+      brands: ["小米", "华为", "OPPO", "网易严选", "京东京造"],
+      characteristics: [
+        "头部品牌占据平台搜索流量入口，广告竞价激烈",
+        "白牌价格内卷严重，差异化品牌才有溢价空间",
+        "用户评价和种草内容对转化影响极大",
+      ],
+    };
+  }
   return {
     brands: ["Anker", "JBL", "TOZO", "Belkin", "UGREEN"],
     characteristics: [
@@ -197,6 +230,39 @@ function buildOpportunities(input: AnalyzeRequest) {
 // ─── Content ───────────────────────────────────────────────
 function buildContent(input: AnalyzeRequest) {
   const p = input.productName;
+  const isChina = input.market === "中国大陆";
+
+  if (isChina) {
+    return {
+      tiktok_pain: [
+        `用了3年${p}，终于找到一款不踩坑的！🔥`,
+        `你还在忍受${p}的这些痛点吗？这个真的救了我💯`,
+        `${p}避坑指南：90%的人都不知道的选购技巧`,
+      ],
+      tiktok_scene: [
+        `在家办公有了这个${p}，效率直接翻倍！#居家好物`,
+        `出差随身必带的${p}，用过的都说香✈️`,
+        `这个${p}改变了我的日常生活 #品质生活`,
+      ],
+      tiktok_curiosity: [
+        `这个${p}凭什么全网爆火？我测了30天告诉你真相👀`,
+        `所有人都说这个${p}好用，真的假的？上手实测🤯`,
+        `我以为${p}是智商税，用了之后发现错怪它了`,
+      ],
+      xiaohongshu: [
+        `被问了100遍的${p}，真的好用到离谱✨\n\n姐妹们！这个${p}我用了两周了，从一开始的半信半疑到现在每天都离不开，真的是相见恨晚！\n\n🎯 适合人群：追求品质/注重效率/对生活有要求的宝子们\n💡 使用感受：质感完全不输大牌，性价比绝了\n🔥 真心建议有需要的直接冲，不会后悔！\n\n#好物分享 #${p} #提升幸福感 #打工人必备 #性价比好物`,
+      ],
+      amazon_seo: [`${p}——高品质 便携设计 多功能 适合居家办公旅行 售后无忧`],
+      ad_copy: [
+        `提升品质生活，就选${p}`,
+        `用料扎实，性价比超乎想象`,
+        `为真实使用场景设计，解决实际问题`,
+        `已服务10万+用户，好评如潮`,
+        `一个${p}，无限可能`,
+      ],
+    };
+  }
+
   const better = p.replace(/[Ss]tand|[Hh]older|[Mm]ount/gi, "").trim();
 
   return {
@@ -234,8 +300,81 @@ function buildContent(input: AnalyzeRequest) {
 // ─── Why It Works ──────────────────────────────────────────
 function buildWhyItWorks(input: AnalyzeRequest) {
   const p = input.productName;
+  if (input.market === "中国大陆") {
+    return {
+      summary: `${p}切中了国内消费者对"好用不贵+颜值在线"的核心诉求，借助抖音/小红书内容种草和国内成熟供应链可实现快速起量。`,
+      growth_logic: `第一阶段：抖音短视频+小红书种草获取种子用户 → 第二阶段：淘宝/京东承接搜索流量，拼多多做价格锚点 → 第三阶段：用户UGC内容反哺社媒，形成"内容种草-平台成交-好评反哺"增长飞轮。`,
+    };
+  }
   return {
     summary: `${p}切中了目标市场消费者对"${input.market === "欧美" ? "品质+性价比" : "好用+不贵"}"的核心诉求，通过供应链优势和内容种草可实现快速冷启动。`,
     growth_logic: `第一阶段：TikTok/小红书内容种草获取种子用户 → 第二阶段：Amazon SEO+PPC截获品类搜索流量 → 第三阶段：UGC内容反哺社媒传播，形成"内容-流量-转化-评价"增长飞轮。`,
+  };
+}
+
+// ─── V3: Platform Matches ──────────────────────────────────
+function buildPlatformMatches(input: AnalyzeRequest): PlatformMatch[] {
+  const isChina = input.market === "中国大陆";
+  if (isChina) {
+    return [
+      { platform: "抖音", score: 9.1, reason: "短视频展示性强，用户决策链路短，适合内容驱动型产品快速起量" },
+      { platform: "小红书", score: 8.6, reason: "种草心智成熟，女性用户占比高，适合品质型产品建立品牌认知" },
+      { platform: "淘宝", score: 8.0, reason: "搜索流量稳定，用户购买意图明确，适合承接种草流量" },
+      { platform: "拼多多", score: 7.3, reason: "价格敏感型用户为主，适合走量但利润空间有限" },
+      { platform: "京东", score: 6.8, reason: "用户品质预期高，适合品牌化运营，但入驻门槛和运营成本较高" },
+    ];
+  }
+  return [
+    { platform: "TikTok Shop", score: 9.0, reason: "Viral potential is high; short-form video drives impulse purchases for visually appealing products" },
+    { platform: "Amazon", score: 8.2, reason: "Largest search volume; established trust; ideal for scaling after initial traction" },
+    { platform: "Shopee", score: 7.5, reason: "Strong in Southeast Asia; price-sensitive audience; good for volume play" },
+    { platform: "Lazada", score: 7.0, reason: "Growing platform; brand-focused; higher entry barrier but loyal user base" },
+  ];
+}
+
+// ─── V3: Viral Potential ───────────────────────────────────
+function buildViralPotential(input: AnalyzeRequest): ViralPotential {
+  const hasVisual = /phone|stand|light|lamp|mirror|case|bag|toy|plush|doll|gadget/i.test(input.productName);
+  const hasEmotion = /pet|dog|cat|baby|kids|gift|plush|doll/i.test(input.productName);
+  const isConsumable = /food|snack|drink|coffee|tea|oil|cream|mask|patch|soap/i.test(input.productName);
+
+  if (hasVisual && hasEmotion) {
+    return { score: 88, grade: "A", reasons: ["产品视觉冲击力强，天然适合短视频传播", "情感属性驱动社交分享，容易形成自传播", "目标用户群体与抖音/小红书核心用户高度重合"] };
+  }
+  if (hasVisual) {
+    return { score: 78, grade: "B", reasons: ["产品展示性强，适合短视频和图文内容形态", "用户购买决策受内容种草影响较大", "需配合达人测评内容建立信任背书"] };
+  }
+  if (isConsumable) {
+    return { score: 72, grade: "B", reasons: ["消耗属性驱动复购，适合直播带货和订阅模式", "用户尝新意愿较高，新品推广阻力小", "需要建立品牌信任降低首次购买决策门槛"] };
+  }
+  return { score: 65, grade: "B", reasons: ["品类内容传播性中等，需差异化内容策略", "用户决策偏理性，需要专业测评和口碑背书", "可通过场景细分和人群精准定位提升转化"] };
+}
+
+// ─── V3: Content Strategy ──────────────────────────────────
+function buildContentStrategy(input: AnalyzeRequest): ContentStrategy {
+  const isChina = input.market === "中国大陆";
+  const hasVisual = /phone|stand|light|lamp|mirror|case|bag|toy|gadget|camera|lens/i.test(input.productName);
+
+  if (isChina) {
+    if (hasVisual) {
+      return {
+        strategies: ["场景营销", "达人测评", "开箱体验"],
+        why: "该品类视觉展示性强，场景化内容能有效激发用户代入感和购买欲望。达人测评可建立信任背书，开箱内容能降低用户对新品的试错顾虑。建议抖音+小红书双平台联动。",
+      };
+    }
+    return {
+      strategies: ["痛点营销", "知识科普", "价格对比"],
+      why: "通过痛点内容唤醒用户需求，知识科普建立专业信任，价格对比突出性价比优势。建议以小红书深度种草为主，抖音信息流投流为辅。",
+    };
+  }
+  if (hasVisual) {
+    return {
+      strategies: ["场景营销", "达人测评", "开箱体验"],
+      why: "Visually-driven products perform best with scenario-based content. Influencer unboxing builds trust quickly. Scene marketing helps users imagine the product in their daily life.",
+    };
+  }
+  return {
+    strategies: ["痛点营销", "知识科普", "价格对比"],
+    why: "Pain-point content triggers need recognition. Knowledge sharing establishes authority. Price comparison highlights value proposition and reduces decision friction.",
   };
 }

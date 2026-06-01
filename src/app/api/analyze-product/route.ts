@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       const body: AnalyzeRequest = await request.clone().json().catch(() => ({
         productName: "Unknown Product",
         market: "欧美" as const,
-        platform: "TikTok" as const,
+        platform: "TikTok Shop" as const,
       }));
       const fallback = generateDemoAnalysis(body);
       return NextResponse.json(fallback);
