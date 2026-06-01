@@ -1,14 +1,20 @@
 import type { PlatformMatch } from "@/lib/types";
 
+function StarRating({ score }: { score: number }) {
+  const stars = Math.round(score / 2);
+  return (
+    <span className="text-[11px] text-amber-400/80 tracking-wider">
+      {"★".repeat(stars)}{"☆".repeat(5 - stars)}
+    </span>
+  );
+}
+
 export default function PlatformMatchCard({
   matches,
 }: {
   matches: PlatformMatch[];
 }) {
-  // Sort by score descending
   const sorted = [...matches].sort((a, b) => b.score - a.score);
-  const top3 = sorted.slice(0, 3);
-  const rest = sorted.slice(3);
 
   return (
     <div className="glass-card p-6 animate-fade-in">
@@ -17,60 +23,81 @@ export default function PlatformMatchCard({
         <h2 className="text-[15px] font-semibold text-white/80">平台匹配度</h2>
       </div>
 
-      {/* Top 3 recommended */}
-      <div className="space-y-2 mb-4">
-        {top3.map((m, i) => {
-          const medals = ["🥇", "🥈", "🥉"];
-          const bgStyles = [
-            "bg-amber-500/5 border-amber-500/10",
-            "bg-white/[0.02] border-white/[0.05]",
-            "bg-white/[0.02] border-white/[0.05]",
-          ];
+      <div className="space-y-4">
+        {sorted.map((m, i) => {
+          const isFirst = i === 0;
+          const medals = ["🥇", "🥈", "🥉", "4", "5"];
           return (
             <div
               key={m.platform}
-              className={`flex items-center gap-3 p-3 rounded-xl border ${bgStyles[i]}`}
+              className={`p-4 rounded-xl border transition-all ${
+                isFirst
+                  ? "bg-amber-500/[0.04] border-amber-500/[0.12]"
+                  : "bg-white/[0.015] border-white/[0.04]"
+              }`}
             >
-              <span className="text-sm shrink-0">{medals[i]}</span>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[14px] font-medium text-white/75">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm shrink-0">
+                    {medals[i] || i + 1}
+                  </span>
+                  <span className="text-[14px] font-medium text-white/80">
                     {m.platform}
                   </span>
-                  <span className="text-[13px] font-semibold text-ios-blue tabular-nums">
-                    {m.score}
-                  </span>
+                  <StarRating score={m.score} />
                 </div>
-                <p className="text-[12px] text-white/35 leading-relaxed">
-                  {m.reason}
-                </p>
+                <span className="text-[15px] font-bold text-ios-blue tabular-nums">
+                  {m.score}
+                </span>
+              </div>
+
+              {/* Reason */}
+              <p className="text-[12px] text-white/40 mb-3">{m.reason}</p>
+
+              {/* Strengths & Weaknesses */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <span className="text-[11px] text-emerald-400/70 font-medium uppercase tracking-wider">
+                    优势
+                  </span>
+                  <ul className="mt-1.5 space-y-1">
+                    {m.strengths.map((s, j) => (
+                      <li
+                        key={j}
+                        className="text-[12px] text-white/50 flex items-start gap-1.5"
+                      >
+                        <span className="text-emerald-400/50 mt-0.5 shrink-0 text-[10px]">
+                          +
+                        </span>
+                        {s}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <span className="text-[11px] text-red-400/70 font-medium uppercase tracking-wider">
+                    劣势
+                  </span>
+                  <ul className="mt-1.5 space-y-1">
+                    {m.weaknesses.map((w, j) => (
+                      <li
+                        key={j}
+                        className="text-[12px] text-white/40 flex items-start gap-1.5"
+                      >
+                        <span className="text-red-400/40 mt-0.5 shrink-0 text-[10px]">
+                          −
+                        </span>
+                        {w}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* Rest platforms as bars */}
-      {rest.length > 0 && (
-        <div className="space-y-2 pt-3 border-t border-white/[0.05]">
-          {rest.map((m) => (
-            <div key={m.platform} className="flex items-center gap-3">
-              <span className="text-[12px] text-white/35 w-16 shrink-0 text-right">
-                {m.platform}
-              </span>
-              <div className="flex-1 h-1 rounded-full bg-white/[0.04] overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-white/[0.15] transition-all duration-500"
-                  style={{ width: `${m.score * 10}%` }}
-                />
-              </div>
-              <span className="text-[12px] text-white/25 tabular-nums w-6">
-                {m.score}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
