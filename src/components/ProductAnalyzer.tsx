@@ -7,6 +7,7 @@ import type {
   AnalysisStatus,
 } from "@/lib/types";
 import { generateDemoAnalysis } from "@/lib/demo";
+import { buildPrompt, parseAIResponse } from "@/lib/ai";
 
 const MARKETS = ["欧美", "东南亚", "全球"] as const;
 const PLATFORMS = ["TikTok", "Amazon", "Xiaohongshu"] as const;
@@ -102,33 +103,69 @@ export default function ProductAnalyzer() {
     setError("");
     setResult(null);
 
-    try {
-      const res = await fetch("/api/analyze-product", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+    const aiApiKey = process.env.NEXT_PUBLIC_AI_API_KEY;
+    const aiBaseUrl = process.env.NEXT_PUBLIC_AI_BASE_URL || "https://api.deepseek.com";
+    const aiModel = process.env.NEXT_PUBLIC_AI_MODEL || "deepseek-chat";
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "AI暂时无法分析，请稍后再试");
-      }
-
-      setResult(data);
-      setStatus("success");
-    } catch (err: unknown) {
-      // Static hosting fallback — use client-side demo data when API is unreachable
+    // If API key is configured, try AI first, fallback to demo on failure
+    if (aiApiKey) {
       try {
-        const demoResult = generateDemoAnalysis(form);
-        setResult(demoResult);
-        setStatus("success");
-      } catch {
-        setError(
-          err instanceof Error ? err.message : "AI暂时无法分析，请稍后再试"
-        );
-        setStatus("error");
+        const prompt = buildPrompt(form);
+        const res = await fetch(`${aiBaseUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${aiApiKey}`,
+          },
+          body: JSON.stringify({
+            model: aiModel,
+            messages: [
+              {
+                role: "system",
+                content:
+                  "You are a senior cross-border e-commerce product analyst. You output ONLY valid JSON, no markdown, no code blocks, no extra text.",
+              },
+              { role: "user", content: prompt },
+            ],
+            temperature: 0.7,
+            max_tokens: 2000,
+          }),
+        });
+
+        if (!res.ok) {
+          throw new Error(`AI API error: ${res.status}`);
+        }
+
+        const completion = await res.json();
+        const rawResponse = completion.choices?.[0]?.message?.content || "";
+
+        if (rawResponse) {
+          const aiParsed = parseAIResponse(rawResponse);
+          if (
+            aiParsed.market_analysis &&
+            aiParsed.user_profile &&
+            aiParsed.content &&
+            aiParsed.insights
+          ) {
+            setResult(aiParsed);
+            setStatus("success");
+            return;
+          }
+        }
+        throw new Error("AI returned invalid data");
+      } catch (aiErr) {
+        console.warn("AI API failed, using demo fallback:", aiErr);
       }
+    }
+
+    // Fallback to client-side demo mode
+    try {
+      const demoResult = generateDemoAnalysis(form);
+      setResult(demoResult);
+      setStatus("success");
+    } catch {
+      setError("AI暂时无法分析，请稍后再试");
+      setStatus("error");
     }
   };
 
